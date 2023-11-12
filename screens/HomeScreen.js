@@ -1,31 +1,42 @@
-// HomeScreen.js
-import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, FlatList, TouchableOpacity, Image, Alert } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import React, { useEffect, useState } from "react";
+import {
+  View,
+  Text,
+  StyleSheet,
+  FlatList,
+  TouchableOpacity,
+  Image,
+  Alert,
+} from "react-native";
+import { useNavigation, useFocusEffect } from "@react-navigation/native";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const HomeScreen = () => {
   const navigation = useNavigation();
   const [birthdays, setBirthdays] = useState([]);
+  const [selectionMode, setSelectionMode] = useState(false);
+  const [selectedItems, setSelectedItems] = useState([]);
 
-  useEffect(() => {
-    const fetchBirthdays = async () => {
-      try {
-        const keys = await AsyncStorage.getAllKeys();
-        const birthdayData = await AsyncStorage.multiGet(keys);
-        const parsedBirthdays = birthdayData.map(([key, value]) => {
-          const parsedValue = JSON.parse(value);
-          parsedValue.key = key; // Include the key for easy deletion
-          return parsedValue;
-        });
-        setBirthdays(parsedBirthdays);
-      } catch (error) {
-        console.error('Error fetching birthdays:', error);
-      }
-    };
+  const fetchBirthdays = async () => {
+    try {
+      const keys = await AsyncStorage.getAllKeys();
+      const birthdayData = await AsyncStorage.multiGet(keys);
+      const parsedBirthdays = birthdayData.map(([key, value]) => {
+        const parsedValue = JSON.parse(value);
+        parsedValue.key = key; // Include the key for easy deletion
+        return parsedValue;
+      });
+      setBirthdays(parsedBirthdays);
+    } catch (error) {
+      console.error("Error fetching birthdays:", error);
+    }
+  };
 
-    fetchBirthdays();
-  }, []);
+  useFocusEffect(
+    React.useCallback(() => {
+      fetchBirthdays();
+    }, [])
+  );
 
   const calculateDaysUntilBirthday = (birthday) => {
     const today = new Date();
@@ -47,7 +58,8 @@ const HomeScreen = () => {
     // Adjust age if the birthday hasn't occurred yet this year
     if (
       today.getMonth() < birthdayDate.getMonth() ||
-      (today.getMonth() === birthdayDate.getMonth() && today.getDate() < birthdayDate.getDate())
+      (today.getMonth() === birthdayDate.getMonth() &&
+        today.getDate() < birthdayDate.getDate())
     ) {
       return age - 1;
     }
@@ -61,23 +73,30 @@ const HomeScreen = () => {
       await AsyncStorage.removeItem(key);
 
       // Update the state to reflect the changes
-      setBirthdays((prevBirthdays) => prevBirthdays.filter((birthday) => birthday.key !== key));
+      setBirthdays((prevBirthdays) =>
+        prevBirthdays.filter((birthday) => birthday.key !== key)
+      );
+
+      // If the deleted birthday was selected, remove it from selectedItems
+      setSelectedItems((prevSelectedItems) =>
+        prevSelectedItems.filter((selectedItem) => selectedItem.key !== key)
+      );
     } catch (error) {
-      console.error('Error deleting birthday:', error);
+      console.error("Error deleting birthday:", error);
     }
   };
 
   const confirmDelete = (key) => {
     Alert.alert(
-      'Confirm Deletion',
-      'Are you sure you want to delete this birthday?',
+      "Confirm Deletion",
+      "Are you sure you want to delete this birthday?",
       [
         {
-          text: 'Cancel',
-          style: 'cancel',
+          text: "Cancel",
+          style: "cancel",
         },
         {
-          text: 'Delete',
+          text: "Delete",
           onPress: () => deleteBirthday(key),
         },
       ],
@@ -85,14 +104,44 @@ const HomeScreen = () => {
     );
   };
 
+  const toggleSelectionMode = () => {
+    setSelectionMode(!selectionMode);
+    setSelectedItems([]); // Clear selected items when toggling mode
+  };
+
+  const toggleSelectItem = (key) => {
+    // Toggle selection of the item
+    setSelectedItems((prevSelectedItems) => {
+      if (prevSelectedItems.includes(key)) {
+        // Item is already selected, remove it
+        return prevSelectedItems.filter((selectedItem) => selectedItem !== key);
+      } else {
+        // Item is not selected, add it
+        return [...prevSelectedItems, key];
+      }
+    });
+  };
+
+  const deleteSelectedBirthdays = () => {
+    // Delete all selected birthdays
+    selectedItems.forEach((key) => deleteBirthday(key));
+  };
+
   const renderItem = ({ item }) => (
-    <View style={styles.card}>
-      <TouchableOpacity
-        style={styles.deleteButton}
-        onPress={() => confirmDelete(item.key)}
-      >
-        <Text style={styles.deleteButtonText}>Delete</Text>
-      </TouchableOpacity>
+    <TouchableOpacity
+      style={[styles.card, selectionMode && styles.selectionModeCard]}
+      onPress={() => (selectionMode ? toggleSelectItem(item.key) : null)}
+    >
+      {selectionMode && (
+        <TouchableOpacity
+          style={styles.selectionCheckbox}
+          onPress={() => toggleSelectItem(item.key)}
+        >
+          {selectedItems.includes(item.key) && (
+            <View style={styles.selectedIndicator} />
+          )}
+        </TouchableOpacity>
+      )}
       <Image source={{ uri: item.imageUri }} style={styles.thumbnail} />
       <View style={styles.textContainer}>
         <Text style={styles.name}>{item.name}</Text>
@@ -102,12 +151,20 @@ const HomeScreen = () => {
         </Text>
         <Text style={styles.age}>{calculateAge(item)} years old</Text>
       </View>
-    </View>
+    </TouchableOpacity>
   );
 
   return (
     <View style={styles.container}>
       <Text style={styles.heading}>Upcoming Birthdays</Text>
+      <TouchableOpacity
+        style={styles.selectButton}
+        onPress={toggleSelectionMode}
+      >
+        <Text style={styles.selectButtonText}>
+          {selectionMode ? "Cancel" : "Select"}
+        </Text>
+      </TouchableOpacity>
       {birthdays.length > 0 ? (
         <FlatList
           data={birthdays}
@@ -118,10 +175,19 @@ const HomeScreen = () => {
         <Text>No upcoming birthdays</Text>
       )}
 
+      {selectionMode && selectedItems.length > 0 && (
+        <TouchableOpacity
+          style={styles.deleteSelectedButton}
+          onPress={deleteSelectedBirthdays}
+        >
+          <Text style={styles.deleteSelectedButtonText}>Delete Selected</Text>
+        </TouchableOpacity>
+      )}
+
       {/* Plus Button */}
       <TouchableOpacity
         style={styles.plusButton}
-        onPress={() => navigation.navigate('AddBirthday')}
+        onPress={() => navigation.navigate("AddBirthday")}
       >
         <Text style={styles.plusButtonText}>+</Text>
       </TouchableOpacity>
@@ -136,26 +202,38 @@ const styles = StyleSheet.create({
   },
   heading: {
     fontSize: 20,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     marginBottom: 16,
   },
   card: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#f0f0f0',
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#f0f0f0",
     borderRadius: 8,
     padding: 16,
     marginBottom: 16,
   },
+  selectionModeCard: {
+    backgroundColor: "#e0e0e0", // Change background color in selection mode
+  },
+  selectionCheckbox: {
+    marginRight: 8,
+  },
+  selectedIndicator: {
+    width: 16,
+    height: 16,
+    borderRadius: 8,
+    backgroundColor: "green",
+  },
   deleteButton: {
-    backgroundColor: 'red',
+    backgroundColor: "red",
     paddingVertical: 8,
     paddingHorizontal: 12,
     borderRadius: 5,
     marginRight: 8,
   },
   deleteButtonText: {
-    color: '#fff',
+    color: "#fff",
   },
   thumbnail: {
     width: 50,
@@ -168,35 +246,56 @@ const styles = StyleSheet.create({
   },
   name: {
     fontSize: 18,
-    fontWeight: 'bold',
+    fontWeight: "bold",
   },
   date: {
     fontSize: 14,
-    color: '#888',
+    color: "#888",
   },
   daysUntilBirthday: {
     fontSize: 14,
-    color: '#007bff',
+    color: "#007bff",
   },
   age: {
     fontSize: 14,
-    color: '#888',
+    color: "#888",
+  },
+  selectButton: {
+    backgroundColor: "#007bff",
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    borderRadius: 5,
+    marginBottom: 16,
+    alignSelf: "flex-start",
+  },
+  selectButtonText: {
+    color: "#fff",
+  },
+  deleteSelectedButton: {
+    backgroundColor: "red",
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    borderRadius: 5,
+    marginBottom: 16,
+  },
+  deleteSelectedButtonText: {
+    color: "#fff",
   },
   plusButton: {
-    position: 'absolute',
+    position: "absolute",
     bottom: 16,
     right: 16,
     width: 60,
     height: 60,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#007bff',
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "#007bff",
     borderRadius: 30,
   },
   plusButtonText: {
-    color: '#fff',
+    color: "#fff",
     fontSize: 24,
-    fontWeight: 'bold',
+    fontWeight: "bold",
   },
 });
 
