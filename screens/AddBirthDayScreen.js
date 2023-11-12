@@ -13,7 +13,7 @@ import * as ImagePicker from "expo-image-picker";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
-import { faCalendarPlus } from "@fortawesome/free-solid-svg-icons";
+import { faCalendarPlus, faArrowLeft } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-native-fontawesome";
 
 const AddBirthDayScreen = ({ navigation }) => {
@@ -68,7 +68,16 @@ const AddBirthDayScreen = ({ navigation }) => {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.heading}>Add a Birthday</Text>
+      <View style={styles.header}>
+        <TouchableOpacity onPress={() => navigation.goBack()}>
+          <FontAwesomeIcon
+            icon={faArrowLeft}
+            size={20}
+            style={styles.backIcon}
+          />
+        </TouchableOpacity>
+        <Text style={styles.heading}>Add a Birthday</Text>
+      </View>
 
       <TouchableOpacity style={styles.imageContainer} onPress={pickImage}>
         {imageUri ? (
@@ -115,15 +124,37 @@ const AddBirthDayScreen = ({ navigation }) => {
   );
 };
 
+const colors = {
+  background: "#282a36", // Dark background color
+  primary: "#8be9fd", // Primary color
+  text: "#f8f8f2", // Text color
+  border: "#6272a4", // Border color
+  accent: "#ff79c6", // Accent color
+  disabledButton: "#b0b0b0", // Disabled button color
+};
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 16,
+    backgroundColor: colors.background,
+    paddingTop: 50,
+  },
+  header: {
+    display: "flex",
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  backIcon: {
+    color: "#fff",
+    fontSize: 40,
+    fontWeight: "bold",
+    marginRight: 8,
   },
   heading: {
     fontSize: 20,
     fontWeight: "bold",
-    marginBottom: 16,
+    color: colors.primary,
   },
   imageContainer: {
     alignItems: "center",
@@ -134,21 +165,26 @@ const styles = StyleSheet.create({
     height: 100,
     borderRadius: 50,
     resizeMode: "cover",
+    borderColor: colors.border,
+    borderWidth: 1,
   },
   placeholder: {
     width: 100,
     height: 100,
     borderRadius: 50,
-    backgroundColor: "#e0e0e0",
+    backgroundColor: colors.border,
     justifyContent: "center",
     alignItems: "center",
+    borderColor: colors.border,
+    borderWidth: 1,
   },
   placeholderText: {
-    color: "#757575",
+    color: colors.text,
   },
   input: {
     height: 40,
-    borderColor: "gray",
+    borderColor: colors.border,
+    backgroundColor: colors.accent,
     borderWidth: 1,
     marginBottom: 16,
     paddingHorizontal: 8,
@@ -157,7 +193,7 @@ const styles = StyleSheet.create({
     borderRadius: 5,
   },
   addButton: {
-    backgroundColor: "#007bff",
+    backgroundColor: colors.primary,
     paddingVertical: 12,
     paddingHorizontal: 16,
     borderRadius: 5,
@@ -167,15 +203,15 @@ const styles = StyleSheet.create({
     marginTop: 16,
   },
   disabledButton: {
-    backgroundColor: "#b0b0b0", // Use a different color for disabled state
+    backgroundColor: colors.disabledButton,
   },
   buttonText: {
-    color: "#fff",
+    color: colors.text,
     marginLeft: 8,
     fontSize: 16,
   },
   buttonIcon: {
-    color: "#fff",
+    color: colors.text,
     fontSize: 20,
   },
 });

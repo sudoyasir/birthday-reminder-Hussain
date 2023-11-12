@@ -12,7 +12,12 @@ import { useNavigation, useFocusEffect } from "@react-navigation/native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
 import { FontAwesomeIcon } from "@fortawesome/react-native-fontawesome";
-import { faTrash, faPlus } from "@fortawesome/free-solid-svg-icons";
+import {
+  faTrash,
+  faPlus,
+  faCheck,
+  faTimes,
+} from "@fortawesome/free-solid-svg-icons";
 
 const HomeScreen = () => {
   const navigation = useNavigation();
@@ -161,9 +166,16 @@ const HomeScreen = () => {
     <View style={styles.container}>
       <Text style={styles.heading}>Upcoming Birthdays</Text>
       <TouchableOpacity
-        style={styles.selectButton}
+        style={[
+          styles.selectButton,
+          selectionMode ? styles.cancelButton : styles.selectModeButton,
+        ]}
         onPress={toggleSelectionMode}
       >
+        <FontAwesomeIcon
+          icon={selectionMode ? faTimes : faCheck}
+          style={styles.buttonIcon}
+        />
         <Text style={styles.selectButtonText}>
           {selectionMode ? "Cancel" : "Select"}
         </Text>
@@ -198,26 +210,74 @@ const HomeScreen = () => {
   );
 };
 
+const colors = {
+  background: "#282a36", // Dark background color
+  card: "#44475a", // Card background color
+  primary: "#8be9fd", // Primary color for headings and buttons
+  secondary: "#50fa7b", // Secondary color for select mode
+  danger: "#ff5555", // Danger color for cancel mode
+  text: "#f8f8f2", // Text color
+  border: "#6272a4", // Border color
+  accent: "#ff79c6", // Accent color for days until birthday
+  deleteButton: "#ff5555", // Delete button color
+  iconColor: "#6272a4", // Dark color inspired by Dracula theme
+};
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 16,
+    backgroundColor: colors.background,
   },
   heading: {
-    fontSize: 20,
+    fontSize: 25,
     fontWeight: "bold",
     marginBottom: 16,
+    color: colors.primary,
+    backgroundColor: colors.background, // Use the background color from colors object
+    padding: 16,
+    textAlign: "center",
+    borderRadius: 8,
   },
   card: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#f0f0f0",
+    backgroundColor: colors.card,
     borderRadius: 8,
     padding: 16,
     marginBottom: 16,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  selectButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    width: 100,
+    backgroundColor: colors.primary,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    borderRadius: 5,
+    marginBottom: 16,
+    justifyContent: "center",
+  },
+  selectModeButton: {
+    backgroundColor: colors.secondary,
+  },
+  cancelButton: {
+    backgroundColor: colors.danger,
+  },
+  selectButtonText: {
+    color: "#fff",
+    marginLeft: 8,
+    fontSize: 16,
+  },
+  buttonIcon: {
+    color: "#fff",
+    fontSize: 20,
+    marginRight: 8,
   },
   selectionModeCard: {
-    backgroundColor: "#e0e0e0", // Change background color in selection mode
+    backgroundColor: "#44475a",
   },
   selectionCheckbox: {
     marginRight: 8,
@@ -226,10 +286,10 @@ const styles = StyleSheet.create({
     width: 16,
     height: 16,
     borderRadius: 8,
-    backgroundColor: "green",
+    backgroundColor: colors.accent,
   },
   deleteButton: {
-    backgroundColor: "red",
+    backgroundColor: colors.deleteButton,
     paddingVertical: 8,
     paddingHorizontal: 12,
     borderRadius: 5,
@@ -239,10 +299,12 @@ const styles = StyleSheet.create({
     color: "#fff",
   },
   thumbnail: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
+    width: 80,
+    height: 80,
+    borderRadius: 50,
     marginRight: 16,
+    borderWidth: 5,
+    borderColor: colors.border,
   },
   textContainer: {
     flex: 1,
@@ -250,31 +312,20 @@ const styles = StyleSheet.create({
   name: {
     fontSize: 18,
     fontWeight: "bold",
+    color: colors.primary,
   },
   date: {
     fontSize: 14,
-    color: "#888",
+    color: colors.border,
   },
   daysUntilBirthday: {
     fontSize: 14,
-    color: "#007bff",
+    color: colors.accent,
   },
   age: {
     fontSize: 14,
-    color: "#888",
+    color: colors.border,
   },
-  selectButton: {
-    backgroundColor: "#007bff",
-    paddingVertical: 8,
-    paddingHorizontal: 12,
-    borderRadius: 5,
-    marginBottom: 16,
-    alignSelf: "flex-start",
-  },
-  selectButtonText: {
-    color: "#fff",
-  },
-
   bottomActions: {
     flexDirection: "row",
     justifyContent: "space-between",
@@ -282,10 +333,10 @@ const styles = StyleSheet.create({
     marginTop: 16,
   },
   deleteSelectedButton: {
-    backgroundColor: "red",
+    backgroundColor: colors.deleteButton,
     width: 60,
     height: 60,
-    borderRadius: 30, // Make it circular
+    borderRadius: 30,
     alignItems: "center",
     justifyContent: "center",
   },
@@ -300,7 +351,7 @@ const styles = StyleSheet.create({
     height: 60,
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: "#007bff",
+    backgroundColor: colors.primary,
     borderRadius: 30,
   },
   plusButtonText: {
