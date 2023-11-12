@@ -11,6 +11,9 @@ import {
 import { useNavigation, useFocusEffect } from "@react-navigation/native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
+import { FontAwesomeIcon } from "@fortawesome/react-native-fontawesome";
+import { faTrash, faPlus } from "@fortawesome/free-solid-svg-icons";
+
 const HomeScreen = () => {
   const navigation = useNavigation();
   const [birthdays, setBirthdays] = useState([]);
@@ -180,7 +183,7 @@ const HomeScreen = () => {
           style={styles.deleteSelectedButton}
           onPress={deleteSelectedBirthdays}
         >
-          <Text style={styles.deleteSelectedButtonText}>Delete Selected</Text>
+          <FontAwesomeIcon icon={faTrash} style={styles.trashIcon} />
         </TouchableOpacity>
       )}
 
@@ -189,7 +192,7 @@ const HomeScreen = () => {
         style={styles.plusButton}
         onPress={() => navigation.navigate("AddBirthday")}
       >
-        <Text style={styles.plusButtonText}>+</Text>
+        <FontAwesomeIcon icon={faPlus} style={styles.plusButtonText} />
       </TouchableOpacity>
     </View>
   );
@@ -271,14 +274,22 @@ const styles = StyleSheet.create({
   selectButtonText: {
     color: "#fff",
   },
+
+  bottomActions: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginTop: 16,
+  },
   deleteSelectedButton: {
     backgroundColor: "red",
-    paddingVertical: 8,
-    paddingHorizontal: 12,
-    borderRadius: 5,
-    marginBottom: 16,
+    width: 60,
+    height: 60,
+    borderRadius: 30, // Make it circular
+    alignItems: "center",
+    justifyContent: "center",
   },
-  deleteSelectedButtonText: {
+  trashIcon: {
     color: "#fff",
   },
   plusButton: {
