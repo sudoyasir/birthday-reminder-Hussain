@@ -4,7 +4,6 @@ import {
   View,
   Text,
   TextInput,
-  Button,
   StyleSheet,
   Image,
   TouchableOpacity,
@@ -13,6 +12,9 @@ import {
 import * as ImagePicker from "expo-image-picker";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+
+import { faCalendarPlus } from "@fortawesome/free-solid-svg-icons";
+import { FontAwesomeIcon } from "@fortawesome/react-native-fontawesome";
 
 const AddBirthDayScreen = ({ navigation }) => {
   const [name, setName] = useState("");
@@ -61,6 +63,9 @@ const AddBirthDayScreen = ({ navigation }) => {
     setDate(currentDate);
   };
 
+  // Check if the button should be disabled
+  const isButtonDisabled = !imageUri || !name || !date;
+
   return (
     <View style={styles.container}>
       <Text style={styles.heading}>Add a Birthday</Text>
@@ -98,7 +103,14 @@ const AddBirthDayScreen = ({ navigation }) => {
         )}
       </View>
 
-      <Button title="Add Birthday" onPress={handleAddBirthday} />
+      <TouchableOpacity
+        style={[styles.addButton, isButtonDisabled && styles.disabledButton]}
+        onPress={handleAddBirthday}
+        disabled={isButtonDisabled}
+      >
+        <FontAwesomeIcon icon={faCalendarPlus} style={styles.buttonIcon} />
+        <Text style={styles.buttonText}>Add Birthday</Text>
+      </TouchableOpacity>
     </View>
   );
 };
@@ -141,6 +153,30 @@ const styles = StyleSheet.create({
     marginBottom: 16,
     paddingHorizontal: 8,
     justifyContent: "center",
+    marginTop: 16,
+    borderRadius: 5,
+  },
+  addButton: {
+    backgroundColor: "#007bff",
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderRadius: 5,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    marginTop: 16,
+  },
+  disabledButton: {
+    backgroundColor: "#b0b0b0", // Use a different color for disabled state
+  },
+  buttonText: {
+    color: "#fff",
+    marginLeft: 8,
+    fontSize: 16,
+  },
+  buttonIcon: {
+    color: "#fff",
+    fontSize: 20,
   },
 });
 
